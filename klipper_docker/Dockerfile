@@ -7,7 +7,8 @@ RUN apt install -y\
  libusb-dev \
  avrdude gcc-avr binutils-avr avr-libc \
  stm32flash libnewlib-arm-none-eabi \
- gcc-arm-none-eabi binutils-arm-none-eabi libusb-1.0
+ gcc-arm-none-eabi binutils-arm-none-eabi libusb-1.0 \
+ python-numpy python-matplotlib 
 
 RUN mkdir /klipper
 ARG UID

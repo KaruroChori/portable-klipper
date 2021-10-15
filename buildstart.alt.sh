@@ -4,7 +4,7 @@ MAINSAIL_RELEASE="1.16.2"
 
 ########### end of configuration ##################333
 
-ACTIONS=("init" "refresh" "build" "klipper_init" "run" "stop" "restart" "logs")
+ACTIONS=("init" "refresh" "build" "klipper_init" "klipper_config" "run" "stop" "restart" "logs")
 
 show_usage() {
 	echo "usage: $0 <action> [parameters]" 
@@ -18,8 +18,9 @@ show_usage() {
 
 set_variables() {
 	PRINTER_CGROUP="'c 188:* rmw'"
+	SENSORS_CGROUP="'c 166:* rmw'"
 	WEBCAM_CGROUP="'c 81:* rmw'"
-	PRINTER_ACCESS="-v /dev:/dev --device-cgroup-rule=$PRINTER_CGROUP --device-cgroup-rule=$WEBCAM_CGROUP"
+	PRINTER_ACCESS="-v /dev:/dev --device-cgroup-rule=$PRINTER_CGROUP --device-cgroup-rule=$SENSORS_CGROUP --device-cgroup-rule=$WEBCAM_CGROUP"
 	LOG_MOUNT="--mount type=bind,source=$(pwd)/runtime/logs,target=/logs"
 	SDCARD_MOUNT="--mount type=bind,source=$(pwd)/runtime/sdcard,target=/sdcard"
 	TMP_MOUNT="--mount type=bind,source=$(pwd)/runtime/tmp,target=/tmp"
@@ -95,6 +96,11 @@ create_network(){
 klipper_init() {
 	echo "running only klipper for first-time config and flashing" 
 	eval "docker run -it --rm --name klipper-build $PRINTER_ACCESS klipper /bin/bash"
+}
+
+klipper_config() {
+	echo "running a shell for klipper configuring and flashing" 
+	eval "docker run -it --rm --name klipper-build $PRINTER_ACCESS $LOG_MOUNT $TMP_MOUNT $SDCARD_MOUNT $KLIPPER_MOUNT klipper /bin/bash"
 }
 
 start_klipper() {
@@ -223,7 +229,10 @@ if [[ " ${ACTIONS[@]} " =~ " ${ACTION} " ]]; then
 	if [[ "klipper_init" == "$ACTION" ]]; then
 		klipper_init $PARAMETERS
 	fi
-
+	
+	if [[ "klipper_config" == "$ACTION" ]]; then
+		klipper_config $PARAMETERS
+	fi
 	if [[ "stop" == "$ACTION" ]]; then
 		action_stop
 	fi
