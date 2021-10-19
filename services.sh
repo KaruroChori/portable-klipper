@@ -12,6 +12,8 @@ DEFAULT_INTERFACE_NAME=$DEFAULT_INTERFACE
 DEFAULT_INTERFACE_DIR=$DEFAULT_INTERFACE
 
 [[ $DEFAULT_INTERFACE = "fluidd" ]] && DEFAULT_INTERFACE_RELEASE=$FLUIDD_RELEASE || DEFAULT_INTERFACE_RELEASE=$MAINSAIL_RELEASE
+[[ $DEFAULT_INTERFACE = "fluidd" ]] && DEFAULT_INTERFACE_URL="https://github.com/cadriel/fluidd/releases/download/v${DEFAULT_INTERFACE_RELEASE}/${DEFAULT_INTERFACE_DIR}.zip"\
+				     || DEFAULT_INTERFACE_URL="https://github.com/meteyou/mainsail/releases/download/v${DEFAULT_INTERFACE_RELEASE}/${DEFAULT_INTERFACE_DIR}.zip"
 
 ACTIONS=("init" "refresh" "build" "klipper-init" "klipper-config" "start" "stop" "restart" "logs")
 
@@ -56,9 +58,9 @@ check_and_update(){
 	echo -n "checking for ${DEFAULT_INTERFACE_NAME} source ..."
 	[ -d "${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}" ] \
 		&&  echo -n "present, refreshing..." \
-		&& wget -q -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip https://github.com/cadriel/fluidd/releases/download/v${DEFAULT_INTERFACE_RELEASE}/${DEFAULT_INTERFACE_DIR}.zip >/dev/null\
+		&& wget -q -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip ${DEFAULT_INTERFACE_URL} >/dev/null\
 		&& echo -n "... unzipping ..." \
-		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -fo ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
+		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -o ./${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
 	echo "done"
 }
 
@@ -77,9 +79,9 @@ check_and_download() {
 	echo -n "checking for ${DEFAULT_INTERFACE_NAME} source ..."
 	[ ! -d "${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}" ] \
 		&&  echo -n "not present, downloading..." \
-		&& wget -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip https://github.com/cadriel/fluidd/releases/download/v${DEFAULT_INTERFACE_DIR}_RELEASE/fluidd.zip >/dev/null\
+		&& wget -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip ${DEFAULT_INTERFACE_URL} >/dev/null\
 		&& echo -n "... unzipping ..." \
-		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -fo ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
+		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -o ./${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
 	echo "done"
 }
 
@@ -199,10 +201,13 @@ action_init() {
 }
 
 action_stop(){
-	for i in "klipper" "moonraker" "ui"; do
+	for i in "klipper" "moonraker"; do
 		echo -n "stopping $1: "
 		docker stop $i
 	done
+	
+	echo -n "stopping ui: "
+	docker stop $DEFAULT_INTERFACE_DIR
 }
 
 action_restart(){
