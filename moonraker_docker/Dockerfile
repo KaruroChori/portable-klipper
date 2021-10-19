@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.9-buster
 EXPOSE 7125
 RUN apt update && apt install -y python3-virtualenv virtualenv libsodium*
 ARG UID
