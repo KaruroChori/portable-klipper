@@ -14,3 +14,5 @@ now klipper, moonraker and your UI of choice are running in docker (hopefully) a
 
 To stop, use ```./services.sh stop```.
 To restart, ```./services.sh restart```.
+
+Based on https://github.com/dmonizer/klipmoonsail.
