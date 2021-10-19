@@ -1,10 +1,19 @@
 #!/bin/bash
 
-MAINSAIL_RELEASE="1.16.2"
+MAINSAIL_RELEASE="2.0.1"
+FLUIDD_RELEASE="1.16.2"
 
-########### end of configuration ##################333
+DEFAULT_INTERFACE="fluidd"
+#DEFAULT_INTERFACE="mainsail"
 
-ACTIONS=("init" "refresh" "build" "klipper_init" "klipper_config" "run" "stop" "restart" "logs")
+########### end of configuration ##################
+
+DEFAULT_INTERFACE_NAME=$DEFAULT_INTERFACE
+DEFAULT_INTERFACE_DIR=$DEFAULT_INTERFACE
+
+[[ $DEFAULT_INTERFACE = "fluidd" ]] && DEFAULT_INTERFACE_RELEASE=$FLUIDD_RELEASE || DEFAULT_INTERFACE_RELEASE=$MAINSAIL_RELEASE
+
+ACTIONS=("init" "refresh" "build" "klipper-init" "klipper-config" "start" "stop" "restart" "logs")
 
 show_usage() {
 	echo "usage: $0 <action> [parameters]" 
@@ -44,12 +53,12 @@ check_and_update(){
 		&& git pull>/dev/null 
 	echo "done"
 
-	echo -n "checking for mainsail source ..."
-	[ -d "mainsail_docker/mainsail" ] \
+	echo -n "checking for ${DEFAULT_INTERFACE_NAME} source ..."
+	[ -d "${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}" ] \
 		&&  echo -n "present, refreshing..." \
-		&& wget -q -O mainsail_docker/mainsail.zip https://github.com/cadriel/fluidd/releases/download/v$MAINSAIL_RELEASE/fluidd.zip >/dev/null\
+		&& wget -q -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip https://github.com/cadriel/fluidd/releases/download/v${DEFAULT_INTERFACE_RELEASE}/${DEFAULT_INTERFACE_DIR}.zip >/dev/null\
 		&& echo -n "... unzipping ..." \
-		&& unzip -d mainsail_docker/mainsail -fo mainsail_docker/mainsail.zip >/dev/null
+		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -fo ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
 	echo "done"
 }
 
@@ -65,12 +74,12 @@ check_and_download() {
 		&& git clone https://github.com/Arksine/moonraker.git moonraker_docker/moonraker>/dev/null 
 	echo "done"
 
-	echo -n "checking for mainsail source ..."
-	[ ! -d "mainsail_docker/mainsail" ] \
+	echo -n "checking for ${DEFAULT_INTERFACE_NAME} source ..."
+	[ ! -d "${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}" ] \
 		&&  echo -n "not present, downloading..." \
-		&& wget -O mainsail_docker/mainsail.zip https://github.com/cadriel/fluidd/releases/download/v$MAINSAIL_RELEASE/fluidd.zip >/dev/null\
+		&& wget -O ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip https://github.com/cadriel/fluidd/releases/download/v${DEFAULT_INTERFACE_DIR}_RELEASE/fluidd.zip >/dev/null\
 		&& echo -n "... unzipping ..." \
-		&& unzip -d mainsail_docker/mainsail -fo mainsail_docker/mainsail.zip >/dev/null
+		&& unzip -d ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR} -fo ${DEFAULT_INTERFACE_DIR}_docker/${DEFAULT_INTERFACE_DIR}.zip >/dev/null
 	echo "done"
 }
 
@@ -84,9 +93,9 @@ build_moonraker() {
 	docker build $BUILD_ARGS ./moonraker_docker -t moonraker
 }
 
-build_mainsail() { 
-	echo "Building mainsail:"
-	docker build ./mainsail_docker -t mainsail
+build_ui() { 
+	echo "Building ${DEFAULT_INTERFACE_NAME}:"
+	docker build ./${DEFAULT_INTERFACE_DIR}_docker -t ${DEFAULT_INTERFACE_DIR}
 }
 
 create_network(){
@@ -119,9 +128,9 @@ start_moonraker() {
 	echo done
 }
 
-start_mainsail() {
-	echo -n "Starting mainsail ... "
-	docker run --rm -d --name mainsail -p 8080:80 --net klipmoonsail  --hostname mainsail.local --ip 172.18.0.21  mainsail 
+start_ui() {
+	echo -n "Starting ${DEFAULT_INTERFACE_NAME} ... "
+	docker run --rm -d --name ${DEFAULT_INTERFACE_DIR} -p 8080:80 --net klipmoonsail  --hostname ${DEFAULT_INTERFACE_DIR}.local --ip 172.18.0.21  ${DEFAULT_INTERFACE_DIR} 
 	echo done
 }	
 
@@ -134,14 +143,14 @@ action_run(){
 		echo "no container specified, running all"
 		start_klipper
 		start_moonraker
-		start_mainsail
+		start_ui
 		exit	
 	fi
 	while [[ 0 -lt $#  ]]; do
 		if [[ "$1" == "klipper" ]]; then
 			start_klipper
-		elif [[ "$1" == "mainsail" ]]; then
-			start_mainsail
+		elif [[ "$1" == "ui" ]]; then
+			start_ui
 		elif [[ "$1" == "moonraker" ]]; then
 			start_moonraker
 		else
@@ -160,14 +169,14 @@ action_build() {
 		echo "no container specified, building all"
 		build_klipper
 		build_moonraker
-		build_mainsail
+		build_ui
 		exit	
 	fi
 	while [[ 0 -lt $#  ]]; do
 		if [[ "$1" == "klipper" ]]; then
 			build_klipper
-		elif [[ "$1" == "mainsail" ]]; then
-			build_mainsail
+		elif [[ "$1" == "ui" ]]; then
+			build_ui
 		elif [[ "$1" == "moonraker" ]]; then
 			build_moonraker
 		else
@@ -190,7 +199,7 @@ action_init() {
 }
 
 action_stop(){
-	for i in "klipper" "moonraker" "mainsail"; do
+	for i in "klipper" "moonraker" "ui"; do
 		echo -n "stopping $1: "
 		docker stop $i
 	done
@@ -200,7 +209,7 @@ action_restart(){
 	action_stop
 	start_klipper
 	start_moonraker
-	start_mainsail
+	start_ui
 }
 
 if [[ $# -lt 1 ]]; then
@@ -220,17 +229,17 @@ if [[ " ${ACTIONS[@]} " =~ " ${ACTION} " ]]; then
 	if [[ "init" == "$ACTION" ]]; then
 		action_init $PARAMETERS
 	fi
-	if [[ "run" == "$ACTION" ]]; then
+	if [[ "start" == "$ACTION" ]]; then
 		action_run $PARAMETERS
 	fi
 	if [[ "build" == "$ACTION" ]]; then
 		action_build $PARAMETERS
 	fi
-	if [[ "klipper_init" == "$ACTION" ]]; then
+	if [[ "klipper-init" == "$ACTION" ]]; then
 		klipper_init $PARAMETERS
 	fi
 	
-	if [[ "klipper_config" == "$ACTION" ]]; then
+	if [[ "klipper-config" == "$ACTION" ]]; then
 		klipper_config $PARAMETERS
 	fi
 	if [[ "stop" == "$ACTION" ]]; then

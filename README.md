@@ -1,16 +1,16 @@
-# klipmoonsail
+# Portable klipper
 
-intended to build and run dockerized klipper, moonraker and fluid (mainsail on the original branch) on raspi (which has direct usb connection to your 3d printer).
-Still, it will work on any system and I have it on my server.
+A docker-based environment with klipper, moonraker and fluidd or mainsail. It can be installed on any computer running linux with docker and some minimal dependencies.
+In order to use it:
 
-1) edit buildstart.sh script and make sure mainsail version is correct; a separate buildstart.alt.sh has been added for fluidd.
-2) put your klipper config to runtime/config as printer.cfg (beware of resent changes in klipper, which renders all old menu customizations broken). There is sample config file for AnetA8 included for reference if needed.
-3) run ```./buildstart.sh init``` which will clone klipper and moonraker and download mainsail release, build docker images and run klipper for the first time interactively, so you can configure and flash the printer according to klipper docs (up to flashing)
-4) run ```buildstart.sh run``` to run 
+1) edit services.sh to update your selection of the UI and add the latest version.
+2) put your klipper config to runtime/config as `printer.cfg`.
+3) properly edit your `moonraker.conf` file in `moonraker_docker` based on your network configuration.
+3) run ```./start.sh build``` which will clone klipper and moonraker and download mainsail release, build docker images.
+4) you can run an interactive shell in klipper to configure and flash the printer according to klipper docs.
+4) run ```./services.sh start``` to start. 
 
-now klipper, moonraker and fluid are running in docker (hopefully) and you can connect to your raspi:8080 with web browser.
+now klipper, moonraker and your UI of choice are running in docker (hopefully) and you can connect to your localhost:8080 with any web browser.
 
-to stop, use "./buildstart.sh stop"
-to restart, "./buildstart.sh restart"
-
-issues, PRs, stars :) welcome.
+To stop, use ```./services.sh stop```.
+To restart, ```./services.sh restart```.
