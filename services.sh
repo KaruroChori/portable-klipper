@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MAINSAIL_RELEASE="2.0.1"
-FLUIDD_RELEASE="1.16.2"
+MAINSAIL_RELEASE="2.10.0"
+FLUIDD_RELEASE="1.29.1"
 
 DEFAULT_INTERFACE="fluidd"
 #DEFAULT_INTERFACE="mainsail"
@@ -67,13 +67,13 @@ check_and_update(){
 check_and_download() {
 	echo -n "checking for klipper source ..."
 	[ ! -d "klipper_docker/klipper" ] \
-		&& echo -n "not present, cloning..." && git clone https://github.com/KevinOConnor/klipper.git klipper_docker/klipper>/dev/null 
+		&& echo -n "not present, cloning..." && git clone --depth=1 --branch=master https://github.com/KevinOConnor/klipper.git klipper_docker/klipper>/dev/null 
 	echo "done"
 
 	echo -n "checking for moonraker source ..."
 	[ ! -d "moonraker_docker/moonraker" ] \
 		&&  echo -n "not present, cloning..." \
-		&& git clone https://github.com/Arksine/moonraker.git moonraker_docker/moonraker>/dev/null 
+		&& git clone --depth=1 --branch=master https://github.com/Arksine/moonraker.git moonraker_docker/moonraker>/dev/null 
 	echo "done"
 
 	echo -n "checking for ${DEFAULT_INTERFACE_NAME} source ..."
@@ -263,4 +263,3 @@ fi
 
 
 echo "all done"
-
